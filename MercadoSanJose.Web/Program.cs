@@ -11,7 +11,7 @@ builder.Services.AddScoped<IPuesto, PuestoDAO>();
 builder.Services.AddScoped<IConceptoDeuda, ConceptoDeudaDAO>();
 builder.Services.AddScoped<IDeuda, DeudaDAO>();
 builder.Services.AddScoped<IPago, PagoDAO>();
-
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 var app = builder.Build();
 
 app.UseStaticFiles();
