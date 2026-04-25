@@ -1,0 +1,49 @@
+﻿@model IEnumerable<MercadoSanJose.Web.Models.Deuda>
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">💰 Gestión de Caja - Cobros</h2>
+
+    @if (TempData["ok"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["ok"]
+        </div>
+    }
+
+    <form method="get" class="mb-3">
+        <input type="text" name="search" placeholder="Buscar por número de puesto..." class="form-control" />
+        <button type="submit" class="btn btn-primary mt-2">Buscar Pendientes</button>
+    </form>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID Deuda</th>
+                <th>Puesto ID</th>
+                <th>Monto Total</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.PuestoId</td>
+                    <td>@item.MontoTotal.ToString("C")</td>
+                    <td>
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                    </td>
+                    <td>
+                        <a asp-action="Create" asp-route-id="@item.Id" class="btn btn-success btn-sm">
+                            Cobrar
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,12 +1,18 @@
-﻿namespace MercadoSanJose.Web.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Deuda
+namespace MercadoSanJose.Web.Models
 {
-    public int Id { get; set; }
-    public int PuestoId { get; set; }
-    public int ConceptoDeudaId { get; set; }
-    public int ResponsableId { get; set; }
-    public DateTime FechaEmision { get; set; }
-    public decimal MontoTotal { get; set; }
-    public int Estado { get; set; } // 0: Pendiente, 1: Pagada
+    [Table("Deuda")]
+    public class Deuda
+    {
+        [Key]
+        public int Id { get; set; }
+        public int PuestoId { get; set; }
+        public int ConceptoDeudaId { get; set; }
+        public int ResponsableId { get; set; }
+        public DateTime FechaEmision { get; set; }
+        public decimal MontoTotal { get; set; }
+        public int Estado { get; set; }
+    }
 }
