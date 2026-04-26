@@ -1,20 +1,38 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MercadoSanJose.Web.Models;
+﻿using MercadoSanJose.Web.Models.DTO;
 using MercadoSanJose.Web.Repositories.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MercadoSanJose.Web.Controllers;
 
-public class PersonaController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class PersonaController : ControllerBase
 {
-    private readonly IPersona _dao;
+    private readonly IPersona _personaDao;
 
-    public PersonaController(IPersona dao)
+    public PersonaController(IPersona personaDao)
     {
-        _dao = dao;
+        _personaDao = personaDao;
     }
 
-    public IActionResult Index() => View(_dao.getAll());
-    public IActionResult Create() => View();
-    public IActionResult Edit(int id) => View(_dao.getById(id));
-    public IActionResult Delete(int id) => View(_dao.getById(id));
+    [HttpPost("crearPersona")]
+    public IActionResult CrearPersona([FromBody] PersonaDTO persona)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        int idCreado = _personaDao.CrearPersona(persona);
+
+        if (idCreado <= 0)
+            return BadRequest("No se pudo registrar la persona.");
+
+        return Created("", new
+        {
+            id = idCreado,
+            dni = persona.Dni,
+            nombre = persona.Nombre,
+            telefono = persona.Telefono,
+            esGerencia = persona.EsGerencia
+        });
+    }
 }

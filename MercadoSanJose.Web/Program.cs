@@ -1,4 +1,3 @@
-using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Repositories.DAO;
 using MercadoSanJose.Web.Repositories.Interfaces;
 
@@ -11,6 +10,7 @@ builder.Services.AddScoped<IPuesto, PuestoDAO>();
 builder.Services.AddScoped<IConceptoDeuda, ConceptoDeudaDAO>();
 builder.Services.AddScoped<IDeuda, DeudaDAO>();
 builder.Services.AddScoped<IPago, PagoDAO>();
+builder.Services.AddScoped<IPersona, PersonaDAO>();
 
 var app = builder.Build();
 
