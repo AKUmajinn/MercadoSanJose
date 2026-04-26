@@ -1,4 +1,5 @@
-﻿using MercadoSanJose.Web.Models.DTO;
+﻿using MercadoSanJose.Web.Models;
+using MercadoSanJose.Web.Models.DTO;
 using MercadoSanJose.Web.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,5 +35,40 @@ public class PersonaController : ControllerBase
             telefono = persona.Telefono,
             esGerencia = persona.EsGerencia
         });
+    }
+
+    [HttpGet("listarPersona")]
+    public IActionResult ListarPersona()
+    {
+        var personas = _personaDao.ListarPersona();
+
+        return Ok(personas);
+    }
+
+    [HttpGet("obtenerPersona/{id}")]
+    public IActionResult ObtenerPersona(int id)
+    {
+        var persona = _personaDao.getById(id);
+
+        if (persona == null)
+            return NotFound("Persona no encontrada");
+
+        return Ok(persona);
+    }
+
+    [HttpPut("actualizarPersona/{id}")]
+    public IActionResult ActualizarPersona(int id, [FromBody] Persona persona)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        persona.Id = id;
+
+        int resultado = _personaDao.update(persona);
+
+        if (resultado == 0)
+            return NotFound("Persona no encontrada o inactiva.");
+
+        return Ok(persona);
     }
 }

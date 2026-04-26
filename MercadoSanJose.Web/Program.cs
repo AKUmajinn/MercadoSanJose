@@ -1,6 +1,8 @@
 
+using MercadoSanJose.Web.Data;
 using MercadoSanJose.Web.Repositories.DAO;
 using MercadoSanJose.Web.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

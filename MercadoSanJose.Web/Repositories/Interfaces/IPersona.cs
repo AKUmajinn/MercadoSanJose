@@ -5,7 +5,7 @@ namespace MercadoSanJose.Web.Repositories.Interfaces;
 
 public interface IPersona
 {
-    IEnumerable<Persona> getAll();
+    IEnumerable<Persona> ListarPersona();
     Persona getById(int id);
     int CrearPersona(PersonaDTO persona);
     int update(Persona entidad);
