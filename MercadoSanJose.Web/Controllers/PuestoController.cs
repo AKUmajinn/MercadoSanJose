@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MercadoSanJose.Web.Models;
+﻿using MercadoSanJose.Web.Models.DTO;
 using MercadoSanJose.Web.Repositories.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MercadoSanJose.Web.Controllers;
 
-public class PuestoController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class PuestoController : ControllerBase
 {
     private readonly IPuesto _dao;
 
@@ -13,7 +15,13 @@ public class PuestoController : Controller
         _dao = dao;
     }
 
-    public IActionResult Index() => View(_dao.getAll());
-    public IActionResult Create() => View();
-    public IActionResult Edit(int id) => View(_dao.getById(id));
+    [HttpPost("crearPuesto")]
+    public ActionResult crearPuesto([FromBody] PuestoDTO puesto)
+    {
+        int idGenerado = _dao.crearPuesto(puesto);
+
+        puesto.Id = idGenerado;
+
+        return Created("", puesto);
+    }
 }

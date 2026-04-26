@@ -2,10 +2,8 @@
 
 public class Puesto
 {
-    public int Id { get; set; }
-    public int NumeroPuesto { get; set; }
+    public string NumeroPuesto { get; set; } = string.Empty;
     public string Sector { get; set; } = string.Empty;
-    public int Estado { get; set; } // 0: Disponible, 1: Vendido, 2: Alquilado
-    public int PropietarioId { get; set; }
+    public int? PropietarioId { get; set; }
     public int? InquilinoId { get; set; }
 }
