@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MercadoSanJose.Web.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MercadoSanJose.Web.Models
@@ -13,6 +14,12 @@ namespace MercadoSanJose.Web.Models
         public int ResponsableId { get; set; }
         public DateTime FechaEmision { get; set; }
         public decimal MontoTotal { get; set; }
-        public int Estado { get; set; }
+        public EstadoDeuda Estado { get; set; }
+        public Puesto Puesto { get; set; } = null!;
+        public ConceptoDeuda ConceptoDeuda { get; set; } = null!;
+        public Persona Responsable { get; set; } = null!;
+        [Range(0.01, double.MaxValue, ErrorMessage = "El monto debe ser mayor a 0")]
+        public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
+
     }
 }

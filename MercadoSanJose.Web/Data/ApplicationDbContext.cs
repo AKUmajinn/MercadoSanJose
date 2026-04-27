@@ -1,4 +1,5 @@
 ﻿using MercadoSanJose.Web.Models;
+using MercadoSanJose.Web.Models.Enums;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;
@@ -34,8 +35,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Deuda>()
         .Property(d => d.Estado)
         .HasConversion(
-            v => v == 1 ? "Pagada" : "Pendiente", // De C# (int) a la DB (string)
-            v => v == "Pagada" ? 1 : 0            // De la DB (string) a C# (int)
+            v => v == EstadoDeuda.Pagada ? "Pagada" : "Pendiente", // De C# (int) a la DB (string)
+            v => (EstadoDeuda)(v == "Pagada" ? 1 : 0)            // De la DB (string) a C# (int)
         );
     }
 

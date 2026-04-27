@@ -1,5 +1,6 @@
 ﻿using MercadoSanJose.Web.Data;
 using MercadoSanJose.Web.Models;
+using MercadoSanJose.Web.Models.Enums;
 using MercadoSanJose.Web.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,7 +48,7 @@ namespace MercadoSanJose.Web.Repositories.DAO
                     var deuda = _context.Deudas.Find(deudaId);
 
                     if (deuda == null) return (false, "Error: La deuda no existe.");
-                    if (deuda.Estado == 1) return (false, "Error: Esta deuda ya fue pagada.");
+                    if (deuda.Estado == EstadoDeuda.Pagada) return (false, "Error: Esta deuda ya fue pagada.");
 
                     // Validación de monto con redondeo a 2 decimales
                     if (Math.Round(pago.MontoPagado, 2) != Math.Round(deuda.MontoTotal, 2))
@@ -56,7 +57,7 @@ namespace MercadoSanJose.Web.Repositories.DAO
                     }
 
                     // Actualizamos estado y asignamos datos
-                    deuda.Estado = 1;
+                    deuda.Estado = EstadoDeuda.Pagada;
                     pago.DeudaId = deudaId;
                     pago.FechaPago = DateTime.Now;
 

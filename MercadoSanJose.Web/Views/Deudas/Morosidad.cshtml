@@ -1,0 +1,41 @@
+@using MercadoSanJose.Web.Models.ViewModels
+@model IEnumerable<DeudaViewModel>
+@{
+    ViewData["Title"] = "Reporte de Morosidad";
+    var grupos = Model.GroupBy(d => d.NombreResponsable);
+}
+<h2 class="mb-1"><i class="bi bi-exclamation-triangle text-warning"></i> Reporte de Morosidad (RF-09)</h2>
+<p class="text-muted mb-4">Deudas pendientes agrupadas por responsable</p>
+
+@foreach (var grupo in grupos)
+{
+    var total = grupo.Sum(d => d.MontoTotal);
+    <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center bg-light">
+            <span class="fw-bold"><i class="bi bi-person"></i> @grupo.Key</span>
+            <span class="badge bg-danger fs-6">S/ @total.ToString("N2")</span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Puesto</th><th>Concepto</th><th>Emisión</th><th>Monto</th><th>Estado Puesto</th></tr></thead>
+                <tbody>
+                @foreach (var d in grupo)
+                {
+                    <tr>
+                        <td>@d.NumeroPuesto (@d.Sector)</td>
+                        <td>@d.ConceptoDeuda</td>
+                        <td>@d.FechaEmision.ToString("dd/MM/yyyy")</td>
+                        <td>S/ @d.MontoTotal.ToString("N2")</td>
+                        <td><span class="badge bg-secondary">@d.EstadoPuesto</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-success"><i class="bi bi-check-circle"></i> No hay deudas pendientes. ¡Excelente!</div>
+}

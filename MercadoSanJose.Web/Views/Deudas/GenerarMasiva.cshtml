@@ -1,0 +1,41 @@
+@using MercadoSanJose.Web.Models.ViewModels
+@model GenerarDeudaMasivaViewModel
+@{
+    ViewData["Title"] = "Generación Masiva de Deudas";
+}
+<h2 class="mb-4"><i class="bi bi-files"></i> Generación Masiva de Deudas</h2>
+
+<div class="card shadow-sm" style="max-width:560px">
+    <div class="card-header bg-success text-white">
+        <i class="bi bi-lightning"></i> Se aplicará el algoritmo RF-05 a cada puesto de forma independiente
+    </div>
+    <div class="card-body">
+        <form asp-action="GenerarMasiva" method="post">
+            <div class="mb-3">
+                <label asp-for="ConceptoDeudaId" class="form-label fw-semibold">Concepto de Deuda</label>
+                <select asp-for="ConceptoDeudaId" asp-items="ViewBag.Conceptos" class="form-select">
+                    <option value="">-- Seleccione --</option>
+                </select>
+                <span asp-validation-for="ConceptoDeudaId" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="FechaEmision" class="form-label fw-semibold">Período / Fecha de Emisión</label>
+                <input asp-for="FechaEmision" type="date" class="form-control" />
+            </div>
+
+            <div class="alert alert-warning small">
+                <i class="bi bi-exclamation-triangle"></i>
+                Si no selecciona puestos específicos, se procesarán <strong>TODOS</strong> los puestos registrados.
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success" onclick="return confirm('¿Confirma la generación masiva de deudas?')">
+                    <i class="bi bi-play-fill"></i> Ejecutar Generación
+                </button>
+                <a href="/" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

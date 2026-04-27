@@ -1,0 +1,45 @@
+@using MercadoSanJose.Web.Models.ViewModels
+@model RegistrarPagoViewModel
+@{
+    ViewData["Title"] = "Registrar Pago";
+}
+<h2 class="mb-4"><i class="bi bi-cash"></i> Registrar Pago</h2>
+
+<div class="card shadow-sm" style="max-width:520px">
+    <div class="card-header bg-success text-white">
+        Deuda #@Model.DeudaId — Puesto @Model.NumeroPuesto
+    </div>
+    <div class="card-body">
+        <dl class="row small mb-3">
+            <dt class="col-5">Concepto</dt><dd class="col-7">@Model.Concepto</dd>
+            <dt class="col-5">Responsable</dt><dd class="col-7"><strong>@Model.NombreResponsable</strong></dd>
+            <dt class="col-5">Monto Deuda</dt><dd class="col-7 fw-bold text-danger">S/ @Model.MontoTotal.ToString("N2")</dd>
+        </dl>
+        <hr/>
+        <form asp-action="RegistrarPago" method="post">
+            <input type="hidden" asp-for="DeudaId" />
+            <input type="hidden" asp-for="NumeroPuesto" />
+            <input type="hidden" asp-for="Concepto" />
+            <input type="hidden" asp-for="NombreResponsable" />
+            <input type="hidden" asp-for="MontoTotal" />
+            <div asp-validation-summary="All" class="alert alert-danger"></div>
+            <div class="mb-3">
+                <label asp-for="NumeroRecibo" class="form-label fw-semibold">N° de Recibo</label>
+                <input asp-for="NumeroRecibo" class="form-control" />
+                <span asp-validation-for="NumeroRecibo" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MontoPagado" class="form-label fw-semibold">Monto a Cobrar</label>
+                <input asp-for="MontoPagado" type="number" step="0.01" class="form-control" />
+                <span asp-validation-for="MontoPagado" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="FechaPago" class="form-label fw-semibold">Fecha de Pago</label>
+                <input asp-for="FechaPago" type="date" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Confirmar Pago</button>
+            <a asp-action="Buscar" class="btn btn-outline-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

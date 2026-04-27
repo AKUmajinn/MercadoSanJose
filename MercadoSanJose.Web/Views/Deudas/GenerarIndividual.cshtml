@@ -1,0 +1,53 @@
+@using MercadoSanJose.Web.Models.ViewModels
+@model GenerarDeudaIndividualViewModel
+@{
+    ViewData["Title"] = "Generar Deuda Individual";
+}
+<h2 class="mb-4"><i class="bi bi-file-plus"></i> Generar Deuda Individual</h2>
+
+<div class="card shadow-sm" style="max-width:560px">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-info-circle"></i> El responsable se asigna automáticamente según el estado del puesto (RF-05)
+    </div>
+    <div class="card-body">
+        <form asp-action="GenerarIndividual" method="post">
+            <div asp-validation-summary="All" class="alert alert-danger d-none"></div>
+
+            <div class="mb-3">
+                <label asp-for="PuestoId" class="form-label fw-semibold">Puesto</label>
+                <select asp-for="PuestoId" asp-items="ViewBag.Puestos" class="form-select">
+                    <option value="">-- Seleccione --</option>
+                </select>
+                <span asp-validation-for="PuestoId" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConceptoDeudaId" class="form-label fw-semibold">Concepto</label>
+                <select asp-for="ConceptoDeudaId" asp-items="ViewBag.Conceptos" class="form-select">
+                    <option value="">-- Seleccione --</option>
+                </select>
+                <span asp-validation-for="ConceptoDeudaId" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="FechaEmision" class="form-label fw-semibold">Fecha de Emisión</label>
+                <input asp-for="FechaEmision" type="date" class="form-control" />
+            </div>
+
+            <div class="alert alert-info small">
+                <i class="bi bi-lightbulb"></i>
+                <strong>Lógica RF-05:</strong><br/>
+                &bull; Puesto <strong>Alquilado</strong> → Responsable: <em>Inquilino</em><br/>
+                &bull; Puesto <strong>Disponible</strong> → Responsable: <em>Propietario</em> (o Gerencia si le pertenece)<br/>
+                &bull; Puesto <strong>Vendido</strong> → Responsable: <em>Propietario</em>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Generar Deuda
+            </button>
+            <a href="/" class="btn btn-outline-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

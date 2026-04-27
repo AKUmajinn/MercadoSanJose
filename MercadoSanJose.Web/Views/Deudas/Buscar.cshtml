@@ -1,0 +1,64 @@
+@using MercadoSanJose.Web.Models.ViewModels
+@model BuscarDeudasViewModel
+@{
+    ViewData["Title"] = "Registro de Cobros";
+}
+<h2 class="mb-4"><i class="bi bi-search"></i> Búsqueda de Deudas (RF-06)</h2>
+
+<form method="get" class="card p-3 mb-4 shadow-sm" style="max-width:600px">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold">N° de Puesto</label>
+            <input name="numeroPuesto" value="@Model.NumeroPuesto" class="form-control" placeholder="Ej: A-01" />
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-semibold">DNI del Responsable</label>
+            <input name="dniResponsable" value="@Model.DNIResponsable" class="form-control" placeholder="12345678" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i></button>
+        </div>
+    </div>
+</form>
+
+@if (Model.Resultados.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-header fw-semibold">@Model.Resultados.Count resultado(s) encontrado(s)</div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Puesto</th>
+                        <th>Concepto</th>
+                        <th>Fecha Emisión</th>
+                        <th>Responsable</th>
+                        <th>Monto</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.Resultados)
+                    {
+                        <tr>
+                            <td><strong>@d.NumeroPuesto</strong><br/><small class="text-muted">@d.Sector</small></td>
+                            <td>@d.ConceptoDeuda</td>
+                            <td>@d.FechaEmision.ToString("dd/MM/yyyy")</td>
+                            <td>@d.NombreResponsable<br/><small class="text-muted">@d.DNIResponsable</small></td>
+                            <td class="fw-bold">S/ @d.MontoTotal.ToString("N2")</td>
+                            <td>
+                                <a asp-action="RegistrarPago" asp-route-deudaId="@d.Id" class="btn btn-sm btn-success">
+                                    <i class="bi bi-cash"></i> Cobrar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if (Context.Request.Query.ContainsKey("numeroPuesto") || Context.Request.Query.ContainsKey("dniResponsable"))
+{
+    <div class="alert alert-info"><i class="bi bi-info-circle"></i> No se encontraron deudas pendientes con esos criterios.</div>
+}

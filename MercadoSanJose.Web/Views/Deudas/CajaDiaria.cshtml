@@ -1,0 +1,43 @@
+@using MercadoSanJose.Web.Models.ViewModels
+@model ResumenCajaDiariaViewModel
+@{
+    ViewData["Title"] = "Caja Diaria";
+}
+<h2 class="mb-4"><i class="bi bi-cash-stack"></i> Reporte de Caja Diaria (RF-08)</h2>
+
+<form method="get" class="d-flex gap-2 align-items-end mb-4">
+    <div>
+        <label class="form-label fw-semibold">Fecha</label>
+        <input type="date" name="fecha" value="@Model.Fecha.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Consultar</button>
+</form>
+
+<div class="card shadow-sm" style="max-width:500px">
+    <div class="card-header bg-success text-white fw-bold">
+        Resumen del @Model.Fecha.ToString("dd/MM/yyyy")
+    </div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead class="table-dark">
+                <tr><th>Concepto</th><th>Pagos</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.DetallesPorConcepto)
+                {
+                    <tr>
+                        <td>@item.Concepto</td>
+                        <td class="text-center">@item.CantidadPagos</td>
+                        <td class="fw-bold">S/ @item.Total.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="table-success">
+                <tr>
+                    <td colspan="2" class="fw-bold">TOTAL RECAUDADO</td>
+                    <td class="fw-bold fs-5">S/ @Model.TotalRecaudado.ToString("N2")</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

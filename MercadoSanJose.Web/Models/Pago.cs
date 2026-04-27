@@ -17,5 +17,6 @@ namespace MercadoSanJose.Web.Models
 
         [Required(ErrorMessage = "El número de recibo es obligatorio")]
         public string NumeroRecibo { get; set; } = string.Empty;
+        public Deuda Deuda { get; set; } = null!;
     }
 }

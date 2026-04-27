@@ -11,4 +11,5 @@ public class Persona
 
     public ICollection<Puesto> PuestosComoPropietario { get; set; } = new List<Puesto>();
     public ICollection<Puesto> PuestosComoInquilino { get; set; } = new List<Puesto>();
+    public ICollection<Deuda> DeudasComoResponsable { get; set; } = new List<Deuda>();
 }
