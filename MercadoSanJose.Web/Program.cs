@@ -1,29 +1,30 @@
-
 using MercadoSanJose.Web.Data;
+using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Repositories.DAO;
 using MercadoSanJose.Web.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configurar la conexión a la base de datos (¡Esto es lo que faltaba!)
 var connectionString = builder.Configuration.GetConnectionString("dataBase");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllersWithViews();
 
-// 2. Registrar tus DAOs
+
 builder.Services.AddScoped<IPersona, PersonaDAO>();
 builder.Services.AddScoped<IPuesto, PuestoDAO>();
 builder.Services.AddScoped<IConceptoDeuda, ConceptoDeudaDAO>();
 builder.Services.AddScoped<IDeuda, DeudaDAO>();
 builder.Services.AddScoped<IPago, PagoDAO>();
-builder.Services.AddScoped<IPersona, PersonaDAO>();
+
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var app = builder.Build();
 
-// 3. Configuración del pipeline (Orden correcto)
+// 3. ConfiguraciÃ³n del pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

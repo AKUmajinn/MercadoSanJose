@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Panel de Reportes";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Módulo Analítico y Reportes</h2>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">Morosidad Estructural</h5>
+                    <p class="card-text">Exporta el consolidado de deudas pendientes cruzando registros de locales y propietarios.</p>
+                    <a asp-controller="Reportes" asp-action="DescargarMorosidadExcel" class="btn btn-outline-danger">
+                        Descargar Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Prueba de Renderizado PDF</h5>
+                    <p class="card-text">Genera un comprobante simulando el cobro de la Deuda con ID 1.</p>
+                    <a asp-controller="Reportes" asp-action="GenerarReciboPdf" asp-route-deudaId="1" class="btn btn-outline-primary" target="_blank">
+                        Ver Recibo PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
