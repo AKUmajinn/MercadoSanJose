@@ -1,12 +1,13 @@
 ﻿using MercadoSanJose.Web.Models;
+using MercadoSanJose.Web.Models.DTO;
 
 namespace MercadoSanJose.Web.Repositories.Interfaces;
 
 public interface IPersona
 {
-    IEnumerable<Persona> getAll();
+    IEnumerable<Persona> ListarPersona();
     Persona getById(int id);
-    int add(Persona entidad);
+    int CrearPersona(PersonaDTO persona);
     int update(Persona entidad);
     int delete(int id);
 }

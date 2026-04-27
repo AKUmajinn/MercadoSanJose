@@ -1,10 +1,21 @@
-﻿namespace MercadoSanJose.Web.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Pago
+namespace MercadoSanJose.Web.Models
 {
-    public int Id { get; set; }
-    public int DeudaId { get; set; }
-    public DateTime FechaPago { get; set; }
-    public decimal MontoPagado { get; set; }
-    public string NumeroRecibo { get; set; } = string.Empty;
+    [Table("Pago")]
+    public class Pago
+    {
+        [Key]
+        public int Id { get; set; }
+        public int DeudaId { get; set; }
+        public DateTime FechaPago { get; set; }
+
+        [Required(ErrorMessage = "El monto es obligatorio")]
+        [Range(0.01, 999999, ErrorMessage = "Monto inválido")]
+        public decimal MontoPagado { get; set; }
+
+        [Required(ErrorMessage = "El número de recibo es obligatorio")]
+        public string NumeroRecibo { get; set; } = string.Empty;
+    }
 }

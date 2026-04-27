@@ -1,0 +1,37 @@
+﻿@model MercadoSanJose.Web.Models.Deuda
+
+<div class="container mt-4">
+    <h3>💳 Procesar Pago</h3>
+    <div class="card p-4 shadow-sm">
+        <form asp-action="ConfirmarPago" method="post">
+            <input type="hidden" name="DeudaId" value="@Model.Id" />
+
+            <div class="mb-3">
+                <label><strong>Monto Total de la Deuda:</strong></label>
+                <input type="text" value="@Model.MontoTotal.ToString("F2")" readonly class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label>Monto a pagar:</label>
+                <input type="number" name="MontoPagado" step="0.01"
+                       value="@Model.MontoTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                       class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label>Número de Recibo:</label>
+                <input type="text" name="NumeroRecibo" required class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Confirmar Pago</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        </form>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger mt-3">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+            </div>
+        }
+    </div>
+</div>
