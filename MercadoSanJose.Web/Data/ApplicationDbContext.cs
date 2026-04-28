@@ -1,8 +1,6 @@
 ﻿using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Models.Enums;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace MercadoSanJose.Web.Data;
 
@@ -19,33 +17,40 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        // MAPEO DE NOMBRES DE TABLAS (Para que coincidan con tu SQL)
+
+        // 1. MAPEO DE NOMBRES DE TABLAS
         modelBuilder.Entity<Persona>().ToTable("Persona");
         modelBuilder.Entity<Puesto>().ToTable("Puesto");
-        modelBuilder.Entity<ConceptoDeuda>().ToTable("Concepto_Deuda");
+        modelBuilder.Entity<ConceptoDeuda>().ToTable("ConceptoDeuda");
         modelBuilder.Entity<Deuda>().ToTable("Deuda");
         modelBuilder.Entity<Pago>().ToTable("Pago");
 
-        // CONFIGURACIÓN DE DECIMALES (Quita los Warnings amarillos)
+        // 2. CONFIGURACIÓN DE DECIMALES
         modelBuilder.Entity<ConceptoDeuda>().Property(c => c.MontoBase).HasPrecision(10, 2);
         modelBuilder.Entity<Deuda>().Property(d => d.MontoTotal).HasPrecision(10, 2);
         modelBuilder.Entity<Pago>().Property(p => p.MontoPagado).HasPrecision(10, 2);
 
-
+        // 3. CONVERTIDOR DE ESTADO
         modelBuilder.Entity<Deuda>()
-        .Property(d => d.Estado)
-        .HasConversion(
-            v => v == EstadoDeuda.Pagada ? "Pagada" : "Pendiente", // De C# (int) a la DB (string)
-            v => (EstadoDeuda)(v == "Pagada" ? 1 : 0)            // De la DB (string) a C# (int)
-        );
+            .Property(d => d.Estado)
+            .HasConversion(
+                v => v == EstadoDeuda.Pagada ? "Pagada" : "Pendiente",
+                v => (EstadoDeuda)(v == "Pagada" ? 1 : 0)
+            );
+
+        // 4. SOLUCIÓN AL ERROR DE RELACIONES AMBIGUAS
+        // Relación: Puesto -> Inquilino
+        modelBuilder.Entity<Puesto>()
+            .HasOne(p => p.Inquilino)
+            .WithMany(per => per.PuestosComoInquilino)
+            .HasForeignKey(p => p.InquilinoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Relación: Puesto -> Propietario
+        modelBuilder.Entity<Puesto>()
+            .HasOne(p => p.Propietario)
+            .WithMany(per => per.PuestosComoPropietario)
+            .HasForeignKey(p => p.PropietarioId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
-
-
-        // DATA SEMILLA (Opcional, ya que tienes el script SQL)
-
-        //modelBuilder.Entity<Deuda>().Property(d => d.MontoTotal).HasPrecision(18, 2);
-        //modelBuilder.Entity<Persona>().HasData(
-        //    new Persona { Id = 1, DNI = "00000000", Nombre = "Gerencia/Asociación", EsGerencia = true }
-        //);
-    
 }

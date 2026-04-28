@@ -42,8 +42,12 @@ namespace MercadoSanJose.Web.Controllers
                 return RedirectToAction("Index");
             }
 
+            // CORRECCIÓN AQUÍ:
+            var deuda = _deudaService.getById(DeudaId);
+            if (deuda == null) return RedirectToAction("Index");
+
             ModelState.AddModelError("", resultado.Message);
-            return View("Create", _deudaService.getById(DeudaId));
+            return View("Create", deuda);
         }
     }
 }
