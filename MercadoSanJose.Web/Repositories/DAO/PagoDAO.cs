@@ -55,8 +55,7 @@ namespace MercadoSanJose.Web.Repositories.DAO
                     {
                         return (false, $"Error: El monto pagado ({pago.MontoPagado}) no coincide con el total ({deuda.MontoTotal}).");
                     }
-
-                    // Actualizamos estado y asignamos datos
+                  
                     deuda.Estado = EstadoDeuda.Pagada;
                     pago.DeudaId = deudaId;
                     pago.FechaPago = DateTime.Now;

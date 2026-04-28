@@ -75,9 +75,6 @@ public class GenerarDeudaMasivaViewModel
     [Required]
     public DateTime FechaEmision { get; set; } = DateTime.Today;
 
-    /// <summary>
-    /// Si se deja vacío, se aplica a TODOS los puestos.
-    /// </summary>
     public int[]? PuestoIds { get; set; }
 }
 
