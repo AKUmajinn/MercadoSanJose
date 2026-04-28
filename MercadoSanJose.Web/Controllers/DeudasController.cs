@@ -112,8 +112,8 @@ public class DeudasController : Controller
     {
         var vm = new BuscarDeudasViewModel
         {
-            NumeroPuesto = numeroPuesto,
-            DNIResponsable = dniResponsable
+            NumeroPuesto = numeroPuesto?.Trim(),
+            DNIResponsable = dniResponsable?.Trim()
         };
 
         if (!string.IsNullOrWhiteSpace(numeroPuesto) || !string.IsNullOrWhiteSpace(dniResponsable))

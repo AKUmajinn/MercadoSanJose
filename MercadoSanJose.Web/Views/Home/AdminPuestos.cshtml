@@ -1,0 +1,170 @@
+﻿@model IEnumerable<MercadoSanJose.Web.Models.Puesto>
+@{
+    ViewData["Title"] = "Gestión de Puestos";
+    var personas = ViewBag.Personas as IEnumerable<MercadoSanJose.Web.Models.Persona>;
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-shop"></i> Gestión Administrativa de Puestos</h2>
+    <p>Módulo para Ventas (RF-03) y Alquileres (RF-04)</p>
+
+    <!-- INICIO: Formulario para Registrar Personas -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body bg-light">
+            <h6 class="fw-bold mb-3"><i class="bi bi-person-plus"></i> Registrar Nuevo Socio/Inquilino</h6>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="small text-muted">DNI</label>
+                    <input type="text" id="nuevoDni" class="form-control form-control-sm" maxlength="8" placeholder="8 dígitos">
+                </div>
+                <div class="col-md-4">
+                    <label class="small text-muted">Nombre Completo</label>
+                    <input type="text" id="nuevoNombre" class="form-control form-control-sm" placeholder="Ej: Juan Pérez">
+                </div>
+                <div class="col-md-3">
+                    <label class="small text-muted">Teléfono</label>
+                    <input type="text" id="nuevoTelefono" class="form-control form-control-sm" placeholder="Opcional">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-success btn-sm w-100" onclick="crearPersona()">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- FIN: Formulario para Registrar Personas -->
+
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Puesto</th>
+                <th>Estado</th>
+                <th>Propietario Actual</th>
+                <th>Inquilino Actual</th>
+                <th>Seleccionar Persona</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@p.NumeroPuesto</td>
+                    <td>
+                        @if ((int)p.Estado == 0)
+                        {
+                            <span class="badge bg-success">Disponible</span>
+                        }
+                        else if ((int)p.Estado == 1)
+                        {
+
+                            <span class="badge bg-primary">Vendido</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge bg-warning text-dark">Alquilado</span>
+                        }
+                    </td>
+                    <td>@p.Propietario?.Nombre</td>
+                    <td>@(p.Inquilino?.Nombre ?? "-")</td>
+                    <td>
+                        <select class="form-select form-select-sm" id="personaSelect_@p.Id">
+                            <option value="">-- Seleccione --</option>
+                            @foreach (var per in personas)
+                            {
+                                <option value="@per.Id">@per.Nombre (@per.DNI)</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="actualizarPuesto(@p.Id, '@p.NumeroPuesto', '@p.Sector', 1, @p.PropietarioId, 'venta')">
+                            Vender
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="actualizarPuesto(@p.Id, '@p.NumeroPuesto', '@p.Sector', 2, @p.PropietarioId, 'alquiler')">
+                            Alquilar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Función para crear personas dinámicamente
+    function crearPersona() {
+        const dni = document.getElementById('nuevoDni').value;
+        const nombre = document.getElementById('nuevoNombre').value;
+
+        if (!dni || !nombre) {
+            alert("DNI y Nombre son obligatorios.");
+            return;
+        }
+
+        const payload = {
+            dni: dni,
+            nombre: nombre,
+            telefono: document.getElementById('nuevoTelefono').value,
+            esGerencia: false
+        };
+
+        fetch('/api/Persona/crearPersona', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Persona registrada con éxito.");
+                location.reload(); // Recarga para que aparezca en la lista de selectores
+            } else {
+                alert("Error al registrar la persona. Verifica si el DNI ya existe o los datos son incorrectos.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Ocurrió un error de red.");
+        });
+    }
+
+        function actualizarPuesto(puestoId, numeroPuesto, sector, nuevoEstado, propietarioActualId, accion) {
+        const selectElement = document.getElementById('personaSelect_' + puestoId);
+        const personaSeleccionada = selectElement.value;
+
+        if (!personaSeleccionada) {
+            alert("Por favor, seleccione una persona de la lista.");
+            return;
+        }
+
+        // Construimos el DTO con los tipos y nombres exactos que exige el backend
+        let payload = {
+        id: puestoId,
+        puesto: numeroPuesto,         // El backend pide "puesto", no "numeroPuesto"
+        numeroPuesto: numeroPuesto,   // Lo enviamos también por redundancia de seguridad
+        sector: sector,
+        estado: String(nuevoEstado),  // Convertimos el entero a texto ("1" o "2")
+        propietarioId: accion === 'venta' ? parseInt(personaSeleccionada) : propietarioActualId,
+        inquilinoId: accion === 'alquiler' ? parseInt(personaSeleccionada) : null
+        };
+
+        fetch(`/api/Puesto/actualizarPuesto/${puestoId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(async response => {
+            if (response.ok) {
+                alert("Operación realizada con éxito.");
+                location.reload();
+            } else {
+                // Capturamos el texto exacto del error para saber qué falló si vuelve a ocurrir
+                const errorText = await response.text();
+                alert("Error al actualizar el puesto. Detalles: " + errorText);
+                console.error("Payload enviado:", payload);
+            }
+        })
+        .catch(error => console.error('Error de red:', error));
+    }
+</script>

@@ -226,7 +226,7 @@ public class DeudaService : IDeudaService
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(numeroPuesto))
-            query = query.Where(d => d.Puesto.NumeroPuesto.Contains(numeroPuesto));
+            query = query.Where(d => d.Puesto.NumeroPuesto == numeroPuesto);
 
         if (!string.IsNullOrWhiteSpace(dniResponsable))
             query = query.Where(d => d.Responsable.DNI == dniResponsable);

@@ -17,7 +17,7 @@
             <div class="card border-0 border-start border-4 border-primary shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-uppercase small fw-bold text-primary mb-1">Total Puestos</div>
-                    <div class="h3 mb-0 fw-bold">17</div>
+                    <div class="h3 mb-0 fw-bold">@ViewBag.TotalPuestos</div>
                     <div class="mt-2 text-muted small">Registrados en el sistema</div>
                 </div>
             </div>
@@ -26,7 +26,7 @@
             <div class="card border-0 border-start border-4 border-warning shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-uppercase small fw-bold text-warning mb-1">Deudas Pendientes</div>
-                    <div class="h3 mb-0 fw-bold">S/ 1,240.00</div>
+                    <div class="h3 mb-0 fw-bold">S/ @ViewBag.DeudasPendientes.ToString("N2")</div>
                     <div class="mt-2 text-muted small">Por cobrar (Morosidad)</div>
                 </div>
             </div>
@@ -35,7 +35,7 @@
             <div class="card border-0 border-start border-4 border-success shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-uppercase small fw-bold text-success mb-1">Caja del Día</div>
-                    <div class="h3 mb-0 fw-bold">S/ 450.00</div>
+                    <div class="h3 mb-0 fw-bold">S/ @ViewBag.CajaDelDia.ToString("N2")</div>
                     <div class="mt-2 text-muted small">Recaudación de hoy</div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
             <div class="card border-0 border-start border-4 border-info shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-uppercase small fw-bold text-info mb-1">Locales Alquilados</div>
-                    <div class="h3 mb-0 fw-bold">8</div>
+                    <div class="h3 mb-0 fw-bold">@ViewBag.LocalesAlquilados</div>
                     <div class="mt-2 text-muted small">Con inquilinos activos</div>
                 </div>
             </div>
@@ -70,6 +70,13 @@
                                 <i class="bi bi-chevron-right"></i>
                             </div>
                             <p class="mb-1 small text-muted">Búsqueda rápida de deudas por DNI o número de puesto.</p>
+                        </a>
+                        <a href="/Home/AdminPuestos" class="list-group-item list-group-item-action border-0 px-0 py-3 border-bottom">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 fw-bold text-dark">Gestión de Puestos y Asignaciones (RF-02, 03, 04)</h6>
+                                <i class="bi bi-chevron-right"></i>
+                            </div>
+                            <p class="mb-1 small text-muted">Administración del estado de los locales, registro de ventas a socios y contratos de alquiler.</p>
                         </a>
                     </div>
                 </div>
