@@ -24,6 +24,13 @@
                 <input asp-for="FechaEmision" type="date" class="form-control" />
             </div>
 
+            <div class="mb-3">
+                <label asp-for="PuestoIds" class="form-label fw-semibold">Puestos Específicos (Opcional)</label>
+                <select asp-for="PuestoIds" asp-items="ViewBag.Puestos" class="form-select" multiple="multiple" size="5">
+                </select>
+                <div class="form-text">Mantenga presionada la tecla Ctrl para seleccionar varios puestos. Si no selecciona ninguno, se procesarán todos.</div>
+            </div>
+
             <div class="alert alert-warning small">
                 <i class="bi bi-exclamation-triangle"></i>
                 Si no selecciona puestos específicos, se procesarán <strong>TODOS</strong> los puestos registrados.
@@ -38,4 +45,9 @@
         </form>
     </div>
 </div>
-@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+}

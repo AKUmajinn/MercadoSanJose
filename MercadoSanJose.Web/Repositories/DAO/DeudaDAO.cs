@@ -1,7 +1,7 @@
-﻿using MercadoSanJose.Web.Data; // Asegúrate de tener esta referencia
+﻿using MercadoSanJose.Web.Data;
 using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore; // Necesario para consultas
+using Microsoft.EntityFrameworkCore;
 
 namespace MercadoSanJose.Web.Repositories.DAO;
 
@@ -9,7 +9,6 @@ public class DeudaDAO : IDeuda
 {
     private readonly ApplicationDbContext _context;
 
-    // Inyección de dependencias: ASP.NET Core se encarga de crear el contexto
     public DeudaDAO(ApplicationDbContext context)
     {
         _context = context;
@@ -17,12 +16,20 @@ public class DeudaDAO : IDeuda
 
     public IEnumerable<Deuda> getAll()
     {
-        return _context.Deudas.ToList();
+        return _context.Deudas
+            .Include(d => d.Puesto)
+            .Include(d => d.ConceptoDeuda)
+            .Include(d => d.Responsable)
+            .ToList();
     }
 
     public Deuda getById(int id)
     {
-        return _context.Deudas.Find(id);
+        return _context.Deudas
+            .Include(d => d.Puesto)
+            .Include(d => d.ConceptoDeuda)
+            .Include(d => d.Responsable)
+            .FirstOrDefault(d => d.Id == id)!;
     }
 
     public int add(Deuda entidad)

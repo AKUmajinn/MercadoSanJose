@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MercadoSanJose.Web.Repositories.Interfaces;
 using MercadoSanJose.Web.Models;
+using MercadoSanJose.Web.Models.Enums;
 
 namespace MercadoSanJose.Web.Controllers
 {
@@ -17,7 +18,7 @@ namespace MercadoSanJose.Web.Controllers
 
         public IActionResult Index(string search)
         {
-            var deudas = _deudaService.getAll().Where(d => d.Estado == 0);
+            var deudas = _deudaService.getAll().Where(d => d.Estado == EstadoDeuda.Pendiente);
             if (!string.IsNullOrEmpty(search))
                 deudas = deudas.Where(d => d.PuestoId.ToString().Contains(search));
 
@@ -42,7 +43,6 @@ namespace MercadoSanJose.Web.Controllers
                 return RedirectToAction("Index");
             }
 
-            // CORRECCIÓN AQUÍ:
             var deuda = _deudaService.getById(DeudaId);
             if (deuda == null) return RedirectToAction("Index");
 

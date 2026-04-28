@@ -6,10 +6,6 @@ using MercadoSanJose.Web.Models;
 
 namespace MercadoSanJose.Web.Services;
 
-/// <summary>
-/// Motor de lógica de negocio: Generación Dinámica de Deudas.
-/// Implementa RF-05: el responsable se determina según el estado del puesto.
-/// </summary>
 public class DeudaService : IDeudaService
 {
     private readonly ApplicationDbContext _context;
@@ -21,18 +17,6 @@ public class DeudaService : IDeudaService
         _logger = logger;
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // RF-05: Motor de decisión de responsable
-    // ════════════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Algoritmo central RF-05: determina quién es el responsable del pago.
-    /// 
-    /// Reglas:
-    ///   ALQUILADO  → InquilinoId
-    ///   DISPONIBLE → PropietarioId (puede ser Gerencia; se le carga igual)
-    ///   VENDIDO    → PropietarioId (el dueño particular)
-    /// </summary>
     private (int responsableId, string motivo) DeterminarResponsable(Puesto puesto)
     {
         if (puesto is null)
@@ -46,7 +30,6 @@ public class DeudaService : IDeudaService
                     $"Puesto alquilado → Responsable: Inquilino ({puesto.Inquilino?.Nombre ?? "?"})");
             }
 
-            // Inconsistencia de datos: estado Alquilado sin inquilino → cae al propietario (requerido)
             var propietarioId = puesto.PropietarioId ??
                 throw new InvalidOperationException($"Puesto marcado Alquilado sin inquilino ni propietario (PuestoId={puesto.Id})");
 
@@ -78,10 +61,6 @@ public class DeudaService : IDeudaService
         throw new InvalidOperationException($"Estado de puesto no reconocido: {puesto.Estado}");
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // Generación individual
-    // ════════════════════════════════════════════════════════════════════════
-
     public async Task<ResultadoGeneracionDeuda> GenerarDeudaIndividualAsync(
         int puestoId, int conceptoDeudaId, DateTime fechaEmision)
     {
@@ -108,18 +87,16 @@ public class DeudaService : IDeudaService
                     Mensaje = $"No se encontró el concepto de deuda con ID {conceptoDeudaId}"
                 };
 
-            // ── Algoritmo RF-05 ──────────────────────────────────────────
             var (responsableId, motivo) = DeterminarResponsable(puesto);
-            // ────────────────────────────────────────────────────────────
 
             var deuda = new Deuda
             {
-                PuestoId       = puesto.Id,
+                PuestoId = puesto.Id,
                 ConceptoDeudaId = concepto.Id,
-                FechaEmision   = fechaEmision,
-                ResponsableId  = responsableId,
-                MontoTotal     = concepto.MontoBase,
-                Estado         = (int)EstadoDeuda.Pendiente
+                FechaEmision = fechaEmision,
+                ResponsableId = responsableId,
+                MontoTotal = concepto.MontoBase,
+                Estado = EstadoDeuda.Pendiente
             };
 
             _context.Deudas.Add(deuda);
@@ -136,7 +113,7 @@ public class DeudaService : IDeudaService
                 DeudaId = deuda.Id,
                 Mensaje = $"Deuda generada exitosamente para el puesto {puesto.NumeroPuesto}",
                 ResponsableAsignado = responsable?.Nombre,
-                MotivoAsignacion    = motivo
+                MotivoAsignacion = motivo
             };
         }
         catch (Exception ex)
@@ -150,10 +127,6 @@ public class DeudaService : IDeudaService
             };
         }
     }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // Generación masiva (RF-05 aplicado a todos los puestos)
-    // ════════════════════════════════════════════════════════════════════════
 
     public async Task<ResultadoGeneracionMasiva> GenerarDeudasMasivasAsync(
         int conceptoDeudaId, DateTime fechaEmision, int[]? puestoIds = null)
@@ -172,7 +145,6 @@ public class DeudaService : IDeudaService
             return resultado;
         }
 
-        // Carga todos los puestos (o los indicados) con sus relaciones
         IQueryable<Puesto> query = _context.Puestos
             .Include(p => p.Propietario)
             .Include(p => p.Inquilino);
@@ -183,7 +155,6 @@ public class DeudaService : IDeudaService
         var puestos = await query.ToListAsync();
         resultado.TotalProcesados = puestos.Count;
 
-        // Transacción única para toda la carga masiva (RNF-02)
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
@@ -191,9 +162,7 @@ public class DeudaService : IDeudaService
 
             foreach (var puesto in puestos)
             {
-                // ── RF-05: decisión por cada puesto ─────────────────────
                 var (responsableId, motivo) = DeterminarResponsable(puesto);
-                // ────────────────────────────────────────────────────────
 
                 var responsable = puesto.Estado == EstadoPuesto.Alquilado
                     ? puesto.Inquilino
@@ -201,22 +170,22 @@ public class DeudaService : IDeudaService
 
                 deudasNuevas.Add(new Deuda
                 {
-                    PuestoId        = puesto.Id,
+                    PuestoId = puesto.Id,
                     ConceptoDeudaId = concepto.Id,
-                    FechaEmision    = fechaEmision,
-                    ResponsableId   = responsableId,
-                    MontoTotal      = concepto.MontoBase,
-                    Estado          = (int)EstadoDeuda.Pendiente
+                    FechaEmision = fechaEmision,
+                    ResponsableId = responsableId,
+                    MontoTotal = concepto.MontoBase,
+                    Estado = EstadoDeuda.Pendiente
                 });
 
                 resultado.TotalExitosos++;
                 resultado.MontoTotalGenerado += concepto.MontoBase;
                 resultado.Detalles.Add(new ResultadoGeneracionDeuda
                 {
-                    Exitoso             = true,
-                    Mensaje             = $"Puesto {puesto.NumeroPuesto} ({puesto.Sector})",
+                    Exitoso = true,
+                    Mensaje = $"Puesto {puesto.NumeroPuesto} ({puesto.Sector})",
                     ResponsableAsignado = responsable?.Nombre,
-                    MotivoAsignacion    = motivo
+                    MotivoAsignacion = motivo
                 });
             }
 
@@ -232,8 +201,8 @@ public class DeudaService : IDeudaService
         {
             await transaction.RollbackAsync();
             _logger.LogError(ex, "Error en generación masiva de deudas");
-            resultado.TotalErrores   = resultado.TotalProcesados;
-            resultado.TotalExitosos  = 0;
+            resultado.TotalErrores = resultado.TotalProcesados;
+            resultado.TotalExitosos = 0;
             resultado.MontoTotalGenerado = 0;
             resultado.Detalles.Clear();
             resultado.Detalles.Add(new ResultadoGeneracionDeuda
@@ -246,10 +215,6 @@ public class DeudaService : IDeudaService
         return resultado;
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // Búsqueda y reportes (RF-06, RF-08, RF-09)
-    // ════════════════════════════════════════════════════════════════════════
-
     public async Task<IEnumerable<DeudaViewModel>> BuscarDeudasAsync(
         string? numeroPuesto, string? dniResponsable)
     {
@@ -257,7 +222,7 @@ public class DeudaService : IDeudaService
             .Include(d => d.Puesto)
             .Include(d => d.ConceptoDeuda)
             .Include(d => d.Responsable)
-            .Where(d => d.Estado == (int)EstadoDeuda.Pendiente)
+            .Where(d => d.Estado == EstadoDeuda.Pendiente)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(numeroPuesto))
@@ -268,16 +233,16 @@ public class DeudaService : IDeudaService
 
         return await query.Select(d => new DeudaViewModel
         {
-            Id               = d.Id,
-            NumeroPuesto     = d.Puesto.NumeroPuesto,
-            Sector           = d.Puesto.Sector,
-            EstadoPuesto     = d.Puesto.Estado.ToString(),
-            ConceptoDeuda    = d.ConceptoDeuda.Nombre,
-            FechaEmision     = d.FechaEmision,
+            Id = d.Id,
+            NumeroPuesto = d.Puesto.NumeroPuesto,
+            Sector = d.Puesto.Sector,
+            EstadoPuesto = d.Puesto.Estado.ToString(),
+            ConceptoDeuda = d.ConceptoDeuda.Nombre,
+            FechaEmision = d.FechaEmision,
             NombreResponsable = d.Responsable.Nombre,
-            DNIResponsable   = d.Responsable.DNI,
-            MontoTotal       = d.MontoTotal,
-            Estado           = d.Estado
+            DNIResponsable = d.Responsable.DNI,
+            MontoTotal = d.MontoTotal,
+            Estado = d.Estado
         }).ToListAsync();
     }
 
@@ -287,21 +252,21 @@ public class DeudaService : IDeudaService
             .Include(d => d.Puesto)
             .Include(d => d.ConceptoDeuda)
             .Include(d => d.Responsable)
-            .Where(d => d.Estado == (int)EstadoDeuda.Pendiente)
+            .Where(d => d.Estado == EstadoDeuda.Pendiente)
             .OrderBy(d => d.Responsable.Nombre)
             .ThenBy(d => d.FechaEmision)
             .Select(d => new DeudaViewModel
             {
-                Id               = d.Id,
-                NumeroPuesto     = d.Puesto.NumeroPuesto,
-                Sector           = d.Puesto.Sector,
-                EstadoPuesto     = d.Puesto.Estado.ToString(),
-                ConceptoDeuda    = d.ConceptoDeuda.Nombre,
-                FechaEmision     = d.FechaEmision,
+                Id = d.Id,
+                NumeroPuesto = d.Puesto.NumeroPuesto,
+                Sector = d.Puesto.Sector,
+                EstadoPuesto = d.Puesto.Estado.ToString(),
+                ConceptoDeuda = d.ConceptoDeuda.Nombre,
+                FechaEmision = d.FechaEmision,
                 NombreResponsable = d.Responsable.Nombre,
-                DNIResponsable   = d.Responsable.DNI,
-                MontoTotal       = d.MontoTotal,
-                Estado           = d.Estado
+                DNIResponsable = d.Responsable.DNI,
+                MontoTotal = d.MontoTotal,
+                Estado = d.Estado
             }).ToListAsync();
     }
 
@@ -332,16 +297,16 @@ public class DeudaService : IDeudaService
             .OrderByDescending(d => d.FechaEmision)
             .Select(d => new DeudaListItemVM
             {
-                Id                    = d.Id,
-                NumeroPuesto          = d.Puesto.NumeroPuesto,
-                Sector                = d.Puesto.Sector,
-                NombreConcepto        = d.ConceptoDeuda.Nombre,
-                FechaEmision          = d.FechaEmision,
-                NombreResponsable     = d.Responsable.Nombre,
-                DNIResponsable        = d.Responsable.DNI,
+                Id = d.Id,
+                NumeroPuesto = d.Puesto.NumeroPuesto,
+                Sector = d.Puesto.Sector,
+                NombreConcepto = d.ConceptoDeuda.Nombre,
+                FechaEmision = d.FechaEmision,
+                NombreResponsable = d.Responsable.Nombre,
+                DNIResponsable = d.Responsable.DNI,
                 EsGerenciaResponsable = d.Responsable.EsGerencia,
-                MontoTotal            = d.MontoTotal,
-                Estado                = (EstadoDeuda)d.Estado
+                MontoTotal = d.MontoTotal,
+                Estado = d.Estado
             })
             .ToListAsync();
     }
@@ -359,15 +324,15 @@ public class DeudaService : IDeudaService
             .GroupBy(p => p.Deuda.ConceptoDeuda.Nombre)
             .Select(g => new ItemCajaDiaria
             {
-                Concepto      = g.Key,
+                Concepto = g.Key,
                 CantidadPagos = g.Count(),
-                Total         = g.Sum(p => p.MontoPagado)
+                Total = g.Sum(p => p.MontoPagado)
             }).ToList();
 
         return new ResumenCajaDiariaViewModel
         {
-            Fecha            = fechaSolo,
-            TotalRecaudado   = detalle.Sum(d => d.Total),
+            Fecha = fechaSolo,
+            TotalRecaudado = detalle.Sum(d => d.Total),
             DetallesPorConcepto = detalle
         };
     }

@@ -19,7 +19,6 @@ public class CobrosService : ICobrosService
 
     public async Task<ResultadoCobro> RegistrarPagoAsync(RegistrarPagoViewModel model)
     {
-        // RNF-02: transacción garantiza atomicidad
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
@@ -35,14 +34,14 @@ public class CobrosService : ICobrosService
 
             var pago = new Pago
             {
-                DeudaId     = model.DeudaId,
-                FechaPago   = model.FechaPago,
+                DeudaId = model.DeudaId,
+                FechaPago = model.FechaPago,
                 MontoPagado = model.MontoPagado,
                 NumeroRecibo = model.NumeroRecibo
             };
 
             _context.Pagos.Add(pago);
-            deuda.Estado = EstadoDeuda.Pagada;  // Cambio de estado atómico
+            deuda.Estado = EstadoDeuda.Pagada;
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -72,12 +71,13 @@ public class CobrosService : ICobrosService
             .Where(d => d.Id == deudaId)
             .Select(d => new RegistrarPagoViewModel
             {
-                DeudaId          = d.Id,
-                NumeroPuesto     = d.Puesto.NumeroPuesto,
-                Concepto         = d.ConceptoDeuda.Nombre,
+                DeudaId = d.Id,
+                NumeroPuesto = d.Puesto.NumeroPuesto,
+                Concepto = d.ConceptoDeuda.Nombre,
                 NombreResponsable = d.Responsable.Nombre,
-                MontoTotal       = d.MontoTotal,
-                FechaPago        = DateTime.Today
+                MontoTotal = d.MontoTotal,
+                MontoPagado = d.MontoTotal,
+                FechaPago = DateTime.Today
             }).FirstOrDefaultAsync();
     }
 }

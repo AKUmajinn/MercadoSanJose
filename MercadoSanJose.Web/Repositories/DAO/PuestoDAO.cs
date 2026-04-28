@@ -1,64 +1,82 @@
-﻿using MercadoSanJose.Web.Models;
+﻿using MercadoSanJose.Web.Data;
+using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Models.DTO;
+using MercadoSanJose.Web.Models.Enums;
 using MercadoSanJose.Web.Repositories.Interfaces;
-using Microsoft.Data.SqlClient;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MercadoSanJose.Web.Repositories.DAO;
 
 public class PuestoDAO : IPuesto
 {
-    private readonly string _connectionString;
+    private readonly ApplicationDbContext _context;
 
-    public PuestoDAO()
+    public PuestoDAO(ApplicationDbContext context)
     {
-        _connectionString = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-            .Build().GetConnectionString("dataBase");
+        _context = context;
     }
 
-    public IEnumerable<Puesto> getAll() => throw new NotImplementedException();
-    public Puesto getById(int id) => throw new NotImplementedException();
-    public int update(Puesto entidad) => throw new NotImplementedException();
-    public int delete(int id) => throw new NotImplementedException();
+    public IEnumerable<Puesto> getAll()
+    {
+        return _context.Puestos
+            .Include(p => p.Propietario)
+            .Include(p => p.Inquilino)
+            .ToList();
+    }
+
+    public Puesto getById(int id)
+    {
+        return _context.Puestos
+            .Include(p => p.Propietario)
+            .Include(p => p.Inquilino)
+            .FirstOrDefault(p => p.Id == id);
+    }
 
     public int crearPuesto(PuestoDTO puesto)
     {
-        using SqlConnection sqlConnection = new(_connectionString);
-        sqlConnection.Open();
+        var nuevoPuesto = new Puesto
+        {
+            NumeroPuesto = puesto.NumeroPuesto,
+            Sector = puesto.Sector,
+            PropietarioId = puesto.PropietarioId == 0 ? null : puesto.PropietarioId,
+            InquilinoId = puesto.InquilinoId == 0 ? null : puesto.InquilinoId,
+            Estado = EstadoPuesto.Disponible
+        };
 
-        SqlCommand sqlCommand = new SqlCommand("usp_crear_puesto", sqlConnection);
-        sqlCommand.CommandType = CommandType.StoredProcedure;
-
-        sqlCommand.Parameters.AddWithValue("@NumeroPuesto", puesto.NumeroPuesto);
-        sqlCommand.Parameters.AddWithValue("@Sector", puesto.Sector);
-        sqlCommand.Parameters.AddWithValue("@PropietarioId", (object?)puesto.PropietarioId ?? DBNull.Value);
-        sqlCommand.Parameters.AddWithValue("@InquilinoId", (object?)puesto.InquilinoId ?? DBNull.Value);
-
-        return Convert.ToInt32(sqlCommand.ExecuteScalar());
+        _context.Puestos.Add(nuevoPuesto);
+        _context.SaveChanges();
+        return nuevoPuesto.Id;
     }
 
-    // ── IMPLEMENTACIÓN DEL NUEVO MÉTODO ──
     public int updatePuesto(PuestoDTO puesto)
     {
-        using SqlConnection sqlConnection = new(_connectionString);
-        sqlConnection.Open();
+        var puestoExistente = _context.Puestos.Find(puesto.Id);
+        if (puestoExistente == null) return 0;
 
-        string query = @"UPDATE Puesto
-                         SET Estado = @Estado,
-                             PropietarioId = @PropietarioId,
-                             InquilinoId = @InquilinoId
-                         WHERE Id = @Id";
+        if (Enum.TryParse<EstadoPuesto>(puesto.Estado, out var estadoParseado))
+        {
+            puestoExistente.Estado = estadoParseado;
+        }
 
-        using SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+        puestoExistente.PropietarioId = puesto.PropietarioId == 0 ? null : puesto.PropietarioId;
+        puestoExistente.InquilinoId = puesto.InquilinoId == 0 ? null : puesto.InquilinoId;
 
-        sqlCommand.Parameters.AddWithValue("@Id", puesto.Id);
+        _context.Puestos.Update(puestoExistente);
+        return _context.SaveChanges();
+    }
 
-        // PASAMOS EL ESTADO DIRECTAMENTE, SIN TRADUCIRLO A PALABRAS
-        sqlCommand.Parameters.AddWithValue("@Estado", puesto.Estado);
+    public int update(Puesto entidad)
+    {
+        _context.Puestos.Update(entidad);
+        return _context.SaveChanges();
+    }
 
-        sqlCommand.Parameters.AddWithValue("@PropietarioId", (object?)puesto.PropietarioId ?? DBNull.Value);
-        sqlCommand.Parameters.AddWithValue("@InquilinoId", (object?)puesto.InquilinoId ?? DBNull.Value);
+    public int delete(int id)
+    {
+        var puesto = _context.Puestos.Find(id);
+        if (puesto == null) return 0;
 
-        return sqlCommand.ExecuteNonQuery();
+        _context.Puestos.Remove(puesto);
+        return _context.SaveChanges();
     }
 }

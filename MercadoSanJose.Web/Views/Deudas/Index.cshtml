@@ -18,7 +18,6 @@
     </div>
 </div>
 
-@* ── FILTROS ── *@
 <div class="card mb-4 shadow-sm">
     <div class="card-header bg-light"><strong>Filtros de Búsqueda</strong></div>
     <div class="card-body">
@@ -38,51 +37,46 @@
                     <label class="form-label">Estado</label>
                     <select name="Estado" class="form-select">
                         <option value="">Todos</option>
-                        <option value="0" selected="@(filtro.Estado == MercadoSanJose.Web.Models.Enums.EstadoDeuda.Pendiente)">Pendiente</option>
-                        <option value="1" selected="@(filtro.Estado == MercadoSanJose.Web.Models.Enums.EstadoDeuda.Pagada)">Pagada</option>
+                        <option value="0">Pendiente</option>
+                        <option value="1">Pagada</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Desde</label>
-                    <input type="date" name="FechaDesde" value="@filtro.FechaDesde?.ToString("yyyy-MM-dd")"
-                           class="form-control" />
+                    <input type="date" name="FechaDesde" value="@filtro.FechaDesde?.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Hasta</label>
-                    <input type="date" name="FechaHasta" value="@filtro.FechaHasta?.ToString("yyyy-MM-dd")"
-                           class="form-control" />
+                    <input type="date" name="FechaHasta" value="@filtro.FechaHasta?.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
             </div>
             <div class="mt-3">
-                <button type="submit" class="btn btn-secondary">
-                    <i class="bi bi-search"></i> Buscar
-                </button>
-                <a asp-action="Index" class="btn btn-outline-secondary ms-2">Limpiar</a>
+                <button type="submit" class="btn btn-secondary">Buscar</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
             </div>
         </form>
     </div>
 </div>
 
-@* ── TABLA ── *@
-@if (!Model.Any())
+@if (Model == null || !Model.Any())
 {
-    <div class="alert alert-info">No se encontraron deudas con los filtros aplicados.</div>
+    <div class="alert alert-info">
+        No se encontraron deudas con los filtros aplicados.
+    </div>
 }
 else
 {
     <div class="card shadow-sm">
-        <div class="card-body p-0">
+        <div class="table-responsive">
             <table class="table table-hover table-striped mb-0">
                 <thead class="table-dark">
                     <tr>
                         <th>Puesto</th>
-                        <th>Sector</th>
                         <th>Concepto</th>
-                        <th>Fecha Emisión</th>
+                        <th>Emisión</th>
                         <th>Responsable</th>
-                        <th>DNI</th>
-                        <th class="text-end">Monto</th>
-                        <th class="text-center">Estado</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -90,38 +84,29 @@ else
                     @foreach (var d in Model)
                     {
                         <tr>
-                            <td><strong>@d.NumeroPuesto</strong></td>
-                            <td>@d.Sector</td>
+                            <td><strong>@d.NumeroPuesto</strong> (@d.Sector)</td>
                             <td>@d.NombreConcepto</td>
                             <td>@d.FechaEmision.ToString("dd/MM/yyyy")</td>
                             <td>
-                                @d.NombreResponsable
-                                @if (d.EsGerenciaResponsable)
-                                {
-                                    <span class="badge bg-secondary ms-1">Gerencia</span>
-                                }
+                                @d.NombreResponsable<br />
+                                <small class="text-muted">@d.DNIResponsable</small>
                             </td>
-                            <td>@d.DNIResponsable</td>
-                            <td class="text-end">S/. @d.MontoTotal.ToString("N2")</td>
-                            <td class="text-center">
+                            <td class="fw-bold">S/ @d.MontoTotal.ToString("N2")</td>
+                            <td>
                                 @if (d.Estado == MercadoSanJose.Web.Models.Enums.EstadoDeuda.Pendiente)
                                 {
-                                    <span class="badge bg-danger">Pendiente</span>
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
                                 }
                                 else
                                 {
                                     <span class="badge bg-success">Pagada</span>
                                 }
                             </td>
-
-                            @* ── COLUMNA DE ACCIONES CORREGIDA ── *@
                             <td class="text-center">
                                 <div class="d-flex gap-2 justify-content-center">
-                                    @* Botón Ver Detalle *@
-                                    <a asp-action="Detalle" asp-params-id="@d.Id" class="btn btn-sm btn-outline-primary shadow-sm">
+                                    <a asp-action="Detalle" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary shadow-sm">
                                         <i class="bi bi-eye"></i> Ver
                                     </a>
-
                                    
                                     @if (d.Estado == MercadoSanJose.Web.Models.Enums.EstadoDeuda.Pagada)
                                     {

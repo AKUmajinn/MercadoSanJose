@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MercadoSanJose.Web.Data;
 using MercadoSanJose.Web.Models.ViewModels;
 using MercadoSanJose.Web.Services;
+using MercadoSanJose.Web.Repositories.Interfaces;
 
 namespace MercadoSanJose.Web.Controllers;
 
@@ -11,13 +12,22 @@ public class DeudasController : Controller
 {
     private readonly IDeudaService _deudaService;
     private readonly ICobrosService _cobrosService;
-    private readonly ApplicationDbContext _context;
+    private readonly IPuesto _puestoDao;
+    private readonly IConceptoDeuda _conceptoDao;
+    private readonly IDeuda _deudaDao;
 
-    public DeudasController(IDeudaService deudaService, ICobrosService cobrosService, ApplicationDbContext context)
+    public DeudasController(
+        IDeudaService deudaService,
+        ICobrosService cobrosService,
+        IPuesto puestoDao,
+        IConceptoDeuda conceptoDao,
+        IDeuda deudaDao)
     {
         _deudaService = deudaService;
         _cobrosService = cobrosService;
-        _context = context;
+        _puestoDao = puestoDao;
+        _conceptoDao = conceptoDao;
+        _deudaDao = deudaDao;
     }
 
     [HttpGet]
@@ -30,62 +40,88 @@ public class DeudasController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Detalle(int id)
+    public IActionResult Detalle(int id)
     {
-        var deuda = await _context.Deudas
-            .Include(d => d.Puesto)
-            .Include(d => d.ConceptoDeuda)
-            .Include(d => d.Responsable)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
+        var deuda = _deudaDao.getById(id);
         if (deuda == null) return NotFound();
         return View(deuda);
     }
+
     [HttpGet]
     public IActionResult GenerarReciboPdf(int deudaId) => Redirect($"/Reportes/GenerarReciboPdf?deudaId={deudaId}");
 
     [HttpGet]
     public IActionResult DescargarMorosidadExcel() => Redirect("/Reportes/DescargarMorosidadExcel");
 
-    // --- MÉTODOS DE GESTIÓN (Generación y Cobros) ---
-    [HttpGet] public async Task<IActionResult> GenerarIndividual() { await CargarSelectListsAsync(); return View(new GenerarDeudaIndividualViewModel { FechaEmision = DateTime.Today }); }
+    [HttpGet]
+    public IActionResult GenerarIndividual()
+    {
+        CargarSelectLists();
+        return View(new GenerarDeudaIndividualViewModel { FechaEmision = DateTime.Today });
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerarIndividual(GenerarDeudaIndividualViewModel model)
     {
-        if (!ModelState.IsValid) { await CargarSelectListsAsync(); return View(model); }
-        var res = await _deudaService.GenerarDeudaIndividualAsync(model.PuestoId, model.ConceptoDeudaId, model.FechaEmision);
-        if (res.Exitoso) { TempData["Success"] = res.Mensaje; TempData["Motivo"] = res.MotivoAsignacion; }
-        else TempData["Error"] = res.Mensaje;
-        return RedirectToAction(nameof(GenerarIndividual));
+        if (!ModelState.IsValid)
+        {
+            CargarSelectLists();
+            return View(model);
+        }
+
+        var resultado = await _deudaService.GenerarDeudaIndividualAsync(
+            model.PuestoId, model.ConceptoDeudaId, model.FechaEmision);
+
+        if (resultado.Exitoso)
+        {
+            TempData["Success"] = resultado.Mensaje;
+            return RedirectToAction(nameof(Index));
+        }
+
+        ModelState.AddModelError(string.Empty, resultado.Mensaje);
+        CargarSelectLists();
+        return View(model);
     }
 
-    [HttpGet] public async Task<IActionResult> GenerarMasiva() { await CargarSelectListsAsync(); return View(new GenerarDeudaMasivaViewModel { FechaEmision = DateTime.Today }); }
+    [HttpGet]
+    public IActionResult GenerarMasiva()
+    {
+        CargarSelectLists();
+        return View(new GenerarDeudaMasivaViewModel { FechaEmision = DateTime.Today });
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerarMasiva(GenerarDeudaMasivaViewModel model)
     {
-        if (!ModelState.IsValid) { await CargarSelectListsAsync(); return View(model); }
-        var res = await _deudaService.GenerarDeudasMasivasAsync(model.ConceptoDeudaId, model.FechaEmision, model.PuestoIds);
-        TempData["ResultadoMasivo"] = System.Text.Json.JsonSerializer.Serialize(res);
-        return RedirectToAction(nameof(ResultadoMasivo));
-    }
+        if (!ModelState.IsValid)
+        {
+            CargarSelectLists();
+            return View(model);
+        }
 
-    [HttpGet]
-    public IActionResult ResultadoMasivo()
-    {
-        if (TempData["ResultadoMasivo"] is string json) return View(System.Text.Json.JsonSerializer.Deserialize<ResultadoGeneracionMasiva>(json));
-        return View();
+        var resultado = await _deudaService.GenerarDeudasMasivasAsync(
+            model.ConceptoDeudaId, model.FechaEmision, model.PuestoIds);
+
+        return View("ResultadoMasivo", resultado);
     }
 
     [HttpGet]
     public async Task<IActionResult> Buscar(string? numeroPuesto, string? dniResponsable)
     {
-        var vm = new BuscarDeudasViewModel { NumeroPuesto = numeroPuesto, DNIResponsable = dniResponsable };
+        var vm = new BuscarDeudasViewModel
+        {
+            NumeroPuesto = numeroPuesto,
+            DNIResponsable = dniResponsable
+        };
+
         if (!string.IsNullOrWhiteSpace(numeroPuesto) || !string.IsNullOrWhiteSpace(dniResponsable))
-            vm.Resultados = (await _deudaService.BuscarDeudasAsync(numeroPuesto, dniResponsable)).ToList();
+        {
+            var resultados = await _deudaService.BuscarDeudasAsync(numeroPuesto, dniResponsable);
+            vm.Resultados = resultados.ToList();
+        }
+
         return View(vm);
     }
 
@@ -93,7 +129,8 @@ public class DeudasController : Controller
     public async Task<IActionResult> RegistrarPago(int deudaId)
     {
         var vm = await _cobrosService.ObtenerDetallePagoAsync(deudaId);
-        return vm == null ? NotFound() : View(vm);
+        if (vm == null) return NotFound();
+        return View(vm);
     }
 
     [HttpPost]
@@ -101,18 +138,36 @@ public class DeudasController : Controller
     public async Task<IActionResult> RegistrarPago(RegistrarPagoViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
+
         var res = await _cobrosService.RegistrarPagoAsync(model);
-        if (res.Exitoso) { TempData["Success"] = res.Mensaje; return RedirectToAction(nameof(Buscar)); }
-        ModelState.AddModelError(string.Empty, res.Mensaje); return View(model);
+        if (res.Exitoso)
+        {
+            TempData["Success"] = res.Mensaje;
+            return RedirectToAction(nameof(Detalle), new { id = model.DeudaId });
+        }
+
+        ModelState.AddModelError(string.Empty, res.Mensaje);
+        return View(model);
     }
 
-    [HttpGet] public async Task<IActionResult> Morosidad() => View(await _deudaService.ObtenerMorosidadAsync());
-
-    [HttpGet] public async Task<IActionResult> CajaDiaria(DateTime? fecha) => View(await _deudaService.ObtenerCajaDiariaAsync(fecha ?? DateTime.Today));
-
-    private async Task CargarSelectListsAsync()
+    [HttpGet]
+    public async Task<IActionResult> Morosidad()
     {
-        ViewBag.Puestos = new SelectList(await _context.Puestos.OrderBy(p => p.NumeroPuesto).ToListAsync(), "Id", "NumeroPuesto");
-        ViewBag.Conceptos = new SelectList(await _context.ConceptosDeuda.OrderBy(c => c.Nombre).ToListAsync(), "Id", "Nombre");
+        return View(await _deudaService.ObtenerMorosidadAsync());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CajaDiaria(DateTime? fecha)
+    {
+        return View(await _deudaService.ObtenerCajaDiariaAsync(fecha ?? DateTime.Today));
+    }
+
+    private void CargarSelectLists()
+    {
+        var puestos = _puestoDao.getAll().OrderBy(p => p.NumeroPuesto).ToList();
+        var conceptos = _conceptoDao.getAll().OrderBy(c => c.Nombre).ToList();
+
+        ViewBag.Puestos = new SelectList(puestos, "Id", "NumeroPuesto");
+        ViewBag.Conceptos = new SelectList(conceptos, "Id", "Nombre");
     }
 }

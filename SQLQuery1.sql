@@ -1,61 +1,102 @@
--- 1. Crear la Base de Datos
-CREATE DATABASE MercadoSanJose;
+USE master;
 GO
 
-USE MercadoSanJose;
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'MercadoSanJoseDB')
+BEGIN
+    ALTER DATABASE MercadoSanJoseDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE MercadoSanJoseDB;
+END
 GO
 
--- 1. Tabla Persona
+CREATE DATABASE MercadoSanJoseDB;
+GO
+
+USE MercadoSanJoseDB;
+GO
+
 CREATE TABLE Persona (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    DNI VARCHAR(20) NOT NULL,
-    Nombre VARCHAR(100) NOT NULL,
-    Telefono VARCHAR(20),
-    EsGerencia BIT DEFAULT 0
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    DNI NVARCHAR(20) NOT NULL,
+    Nombre NVARCHAR(100) NOT NULL,
+    Telefono NVARCHAR(20) NOT NULL,
+    EsGerencia BIT NOT NULL,
+    Activo BIT NOT NULL DEFAULT 1
 );
+GO
 
--- 2. Tabla Puesto
-CREATE TABLE Puesto (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    NumeroPuesto INT NOT NULL,
-    Sector VARCHAR(50),
-    Estado INT DEFAULT 0, -- 0:Disponible, 1:Vendido, 2:Alquilado
-    PropietarioId INT NOT NULL,
-    InquilinoId INT NULL,
-    FOREIGN KEY (PropietarioId) REFERENCES Persona(Id),
-    FOREIGN KEY (InquilinoId) REFERENCES Persona(Id)
-);
-
--- 3. Tabla ConceptoDeuda
 CREATE TABLE ConceptoDeuda (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Nombre VARCHAR(100) NOT NULL,
-    MontoBase DECIMAL(18,2) NOT NULL
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(100) NOT NULL,
+    MontoBase DECIMAL(10,2) NOT NULL
 );
+GO
 
--- 4. Tabla Deuda
+CREATE TABLE Puesto (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    NumeroPuesto NVARCHAR(10) NOT NULL,
+    Sector NVARCHAR(50) NOT NULL,
+    PropietarioId INT NULL,
+    InquilinoId INT NULL,
+    Estado INT NOT NULL,
+    CONSTRAINT FK_Puesto_Propietario FOREIGN KEY (PropietarioId) REFERENCES Persona(Id),
+    CONSTRAINT FK_Puesto_Inquilino FOREIGN KEY (InquilinoId) REFERENCES Persona(Id)
+);
+GO
+
 CREATE TABLE Deuda (
-    Id INT PRIMARY KEY IDENTITY(1,1),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
     PuestoId INT NOT NULL,
     ConceptoDeudaId INT NOT NULL,
     ResponsableId INT NOT NULL,
-    FechaEmision DATETIME DEFAULT GETDATE(),
-    MontoTotal DECIMAL(18,2) NOT NULL,
-    Estado INT DEFAULT 0, -- 0:Pendiente, 1:Pagada
-    FOREIGN KEY (PuestoId) REFERENCES Puesto(Id),
-    FOREIGN KEY (ConceptoDeudaId) REFERENCES ConceptoDeuda(Id),
-    FOREIGN KEY (ResponsableId) REFERENCES Persona(Id)
+    FechaEmision DATETIME2 NOT NULL,
+    MontoTotal DECIMAL(10,2) NOT NULL,
+    Estado INT NOT NULL,
+    CONSTRAINT FK_Deuda_Puesto FOREIGN KEY (PuestoId) REFERENCES Puesto(Id),
+    CONSTRAINT FK_Deuda_ConceptoDeuda FOREIGN KEY (ConceptoDeudaId) REFERENCES ConceptoDeuda(Id),
+    CONSTRAINT FK_Deuda_Responsable FOREIGN KEY (ResponsableId) REFERENCES Persona(Id)
 );
+GO
 
--- 5. Tabla Pago
 CREATE TABLE Pago (
-    Id INT PRIMARY KEY IDENTITY(1,1),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
     DeudaId INT NOT NULL,
-    FechaPago DATETIME DEFAULT GETDATE(),
-    MontoPagado DECIMAL(18,2) NOT NULL,
-    NumeroRecibo VARCHAR(50) NOT NULL,
-    FOREIGN KEY (DeudaId) REFERENCES Deuda(Id)
+    FechaPago DATETIME2 NOT NULL,
+    MontoPagado DECIMAL(10,2) NOT NULL,
+    NumeroRecibo NVARCHAR(50) NOT NULL,
+    CONSTRAINT FK_Pago_Deuda FOREIGN KEY (DeudaId) REFERENCES Deuda(Id)
 );
+GO
 
-INSERT INTO Persona (DNI, Nombre, Telefono, EsGerencia) 
-VALUES ('00000000', 'GERENCIA GENERAL', '999999999', 1);
+INSERT INTO Persona (DNI, Nombre, Telefono, EsGerencia, Activo)
+VALUES 
+('00000000', 'Gerencia', '000000000', 1, 1),
+('11111111', 'Maria Lopez', '111111111', 0, 1),
+('22222222', 'Ana Torres', '222222222', 0, 1);
+GO
+
+INSERT INTO ConceptoDeuda (Nombre, MontoBase)
+VALUES 
+('Limpieza', 50.00),
+('Vigilancia', 70.00);
+GO
+
+INSERT INTO Puesto (NumeroPuesto, Sector, Estado, PropietarioId, InquilinoId)
+VALUES 
+('103', 'A', 0, 1, NULL),
+('104', 'A', 0, 1, NULL),
+('105', 'A', 0, 1, NULL),
+('106', 'A', 0, 1, NULL),
+('107', 'A', 0, 1, NULL),
+('108', 'A', 0, 1, NULL),
+('109', 'A', 1, 2, NULL),
+('110', 'A', 1, 3, NULL),
+('202', 'B', 0, 1, NULL),
+('203', 'B', 0, 1, NULL),
+('204', 'B', 2, 1, 2),
+('205', 'B', 2, 1, 3),
+('206', 'B', 1, 2, NULL),
+('207', 'B', 1, 3, NULL),
+('208', 'B', 2, 2, 3),
+('209', 'B', 0, 1, NULL),
+('210', 'B', 0, 1, NULL);
+GO

@@ -1,127 +1,65 @@
-﻿using MercadoSanJose.Web.Models;
+﻿using MercadoSanJose.Web.Data;
+using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Models.DTO;
 using MercadoSanJose.Web.Repositories.Interfaces;
-using Microsoft.Data.SqlClient;
-using System.Data;
 
 namespace MercadoSanJose.Web.Repositories.DAO;
 
 public class PersonaDAO : IPersona
 {
-    private readonly string _connectionString;
+    private readonly ApplicationDbContext _context;
 
-    public PersonaDAO()
+    public PersonaDAO(ApplicationDbContext context)
     {
-        _connectionString = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-            .Build().GetConnectionString("dataBase");
+        _context = context;
     }
+
     public IEnumerable<Persona> ListarPersona()
     {
-        List<Persona> personas = new List<Persona>();
-
-        using (SqlConnection sqlConnection = new SqlConnection(_connectionString))
-        {
-            sqlConnection.Open();
-
-            SqlCommand sqlCommand = new SqlCommand("usp_Listar_Personas", sqlConnection);
-            sqlCommand.CommandType = CommandType.StoredProcedure;
-
-            SqlDataReader reader = sqlCommand.ExecuteReader();
-
-            while (reader.Read())
-            {
-                personas.Add(new Persona()
-                {
-                    Id = reader.GetInt32(0),
-                    DNI = reader.GetString(1),
-                    Nombre = reader.GetString(2),
-                    Telefono = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                    EsGerencia = reader.GetBoolean(4),
-                    Activo = reader.GetBoolean(5)
-                });
-            }
-        }
-
-        return personas;
+        return _context.Personas.ToList();
     }
+
     public Persona getById(int id)
     {
-        Persona persona = null;
-
-        using (SqlConnection sqlConnection = new SqlConnection(_connectionString))
-        {
-            sqlConnection.Open();
-
-            SqlCommand sqlCommand = new SqlCommand("usp_Obtener_Persona_Por_Id", sqlConnection);
-            sqlCommand.CommandType = CommandType.StoredProcedure;
-
-            sqlCommand.Parameters.AddWithValue("@Id", id);
-
-            SqlDataReader reader = sqlCommand.ExecuteReader();
-
-            if (reader.Read())
-            {
-                persona = new Persona()
-                {
-                    Id = reader.GetInt32(0),
-                    DNI = reader.GetString(1),
-                    Nombre = reader.GetString(2),
-                    Telefono = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                    EsGerencia = reader.GetBoolean(4),
-                    Activo = reader.GetBoolean(5)
-                };
-            }
-        }
-
-        return persona;
+        return _context.Personas.Find(id);
     }
-    public int update(Persona entidad)
-    {
-        using SqlConnection sqlConnection = new SqlConnection(_connectionString);
-        sqlConnection.Open();
 
-        using SqlCommand sqlCommand = new SqlCommand("usp_Actualizar_Persona", sqlConnection);
-        sqlCommand.CommandType = CommandType.StoredProcedure;
-
-        sqlCommand.Parameters.AddWithValue("@Id", entidad.Id);
-        sqlCommand.Parameters.AddWithValue("@DNI", entidad.DNI);
-        sqlCommand.Parameters.AddWithValue("@Nombre", entidad.Nombre);
-        sqlCommand.Parameters.AddWithValue("@Telefono", entidad.Telefono);
-        sqlCommand.Parameters.AddWithValue("@EsGerencia", entidad.EsGerencia);
-
-        object resultado = sqlCommand.ExecuteScalar();
-
-        return Convert.ToInt32(resultado);
-    }
-    public int delete(int id)
-    {
-        using SqlConnection sqlConnection = new(_connectionString);
-        sqlConnection.Open();
-
-        using SqlCommand sqlCommand = new("usp_Eliminar_Persona", sqlConnection);
-        sqlCommand.CommandType = CommandType.StoredProcedure;
-
-        sqlCommand.Parameters.AddWithValue("@Id", id);
-
-        object result = sqlCommand.ExecuteScalar();
-
-        return Convert.ToInt32(result);
-    }
     public int CrearPersona(PersonaDTO persona)
     {
-        using SqlConnection sqlConnection = new(_connectionString);
-        sqlConnection.Open();
+        var nuevaPersona = new Persona
+        {
+            DNI = persona.Dni,
+            Nombre = persona.Nombre,
+            Telefono = persona.Telefono,
+            EsGerencia = persona.EsGerencia,
+            Activo = true
+        };
 
-        using SqlCommand sqlCommand = new("usp_Guardar_Persona", sqlConnection);
-        sqlCommand.CommandType = CommandType.StoredProcedure;
+        _context.Personas.Add(nuevaPersona);
+        _context.SaveChanges();
+        return nuevaPersona.Id;
+    }
 
-        sqlCommand.Parameters.AddWithValue("@DNI", persona.Dni);
-        sqlCommand.Parameters.AddWithValue("@Nombre", persona.Nombre);
-        sqlCommand.Parameters.AddWithValue("@Telefono", persona.Telefono);
-        sqlCommand.Parameters.AddWithValue("@EsGerencia", persona.EsGerencia);
+    public int update(Persona entidad)
+    {
+        var personaExistente = _context.Personas.Find(entidad.Id);
+        if (personaExistente == null) return 0;
 
-        object resultado = sqlCommand.ExecuteScalar();
+        personaExistente.DNI = entidad.DNI;
+        personaExistente.Nombre = entidad.Nombre;
+        personaExistente.Telefono = entidad.Telefono;
+        personaExistente.EsGerencia = entidad.EsGerencia;
 
-        return Convert.ToInt32(resultado);
+        _context.Personas.Update(personaExistente);
+        return _context.SaveChanges();
+    }
+
+    public int delete(int id)
+    {
+        var persona = _context.Personas.Find(id);
+        if (persona == null) return 0;
+
+        _context.Personas.Remove(persona);
+        return _context.SaveChanges();
     }
 }

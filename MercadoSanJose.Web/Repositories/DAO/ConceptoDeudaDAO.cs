@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Microsoft.Data.SqlClient;
+﻿using MercadoSanJose.Web.Data;
 using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Repositories.Interfaces;
 
@@ -7,17 +6,41 @@ namespace MercadoSanJose.Web.Repositories.DAO;
 
 public class ConceptoDeudaDAO : IConceptoDeuda
 {
-    private readonly string _connectionString;
+    private readonly ApplicationDbContext _context;
 
-    public ConceptoDeudaDAO()
+    public ConceptoDeudaDAO(ApplicationDbContext context)
     {
-        _connectionString = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-            .Build().GetConnectionString("dataBase");
+        _context = context;
     }
 
-    public IEnumerable<ConceptoDeuda> getAll() => throw new NotImplementedException();
-    public ConceptoDeuda getById(int id) => throw new NotImplementedException();
-    public int add(ConceptoDeuda entidad) => throw new NotImplementedException();
-    public int update(ConceptoDeuda entidad) => throw new NotImplementedException();
-    public int delete(int id) => throw new NotImplementedException();
+    public IEnumerable<ConceptoDeuda> getAll()
+    {
+        return _context.ConceptosDeuda.ToList();
+    }
+
+    public ConceptoDeuda getById(int id)
+    {
+        return _context.ConceptosDeuda.Find(id);
+    }
+
+    public int add(ConceptoDeuda entidad)
+    {
+        _context.ConceptosDeuda.Add(entidad);
+        return _context.SaveChanges();
+    }
+
+    public int update(ConceptoDeuda entidad)
+    {
+        _context.ConceptosDeuda.Update(entidad);
+        return _context.SaveChanges();
+    }
+
+    public int delete(int id)
+    {
+        var concepto = _context.ConceptosDeuda.Find(id);
+        if (concepto == null) return 0;
+
+        _context.ConceptosDeuda.Remove(concepto);
+        return _context.SaveChanges();
+    }
 }

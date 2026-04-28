@@ -18,8 +18,6 @@ namespace MercadoSanJose.Web.Models
         public Puesto Puesto { get; set; } = null!;
         public ConceptoDeuda ConceptoDeuda { get; set; } = null!;
         public Persona Responsable { get; set; } = null!;
-        [Range(0.01, double.MaxValue, ErrorMessage = "El monto debe ser mayor a 0")]
         public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
-
     }
 }

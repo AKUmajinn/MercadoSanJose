@@ -4,6 +4,7 @@ using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using MercadoSanJose.Web.Models.Enums;
 
 namespace MercadoSanJose.Web.Controllers
 {
@@ -21,9 +22,6 @@ namespace MercadoSanJose.Web.Controllers
             return View();
         }
 
-        // ==========================================
-        // 1. EXCEL: Reporte de Morosidad (ClosedXML)
-        // ==========================================
         [HttpGet]
         public IActionResult DescargarMorosidadExcel()
         {
@@ -32,25 +30,21 @@ namespace MercadoSanJose.Web.Controllers
                 var reporte = (from d in _context.Deudas
                                join p in _context.Puestos on d.PuestoId equals p.Id
                                join r in _context.Personas on d.ResponsableId equals r.Id
-                               where d.Estado == 0 // Solo las pendientes
+                               where d.Estado == EstadoDeuda.Pendiente
                                group d by new { p.NumeroPuesto, r.Nombre, r.DNI } into grupo
                                select new
                                {
                                    Puesto = grupo.Key.NumeroPuesto,
                                    Responsable = grupo.Key.Nombre,
                                    DNI = grupo.Key.DNI,
-                                   // En lugar de mostrar el concepto, mostramos cuántos recibos debe
                                    Concepto = grupo.Count() + " concepto(s) pendiente(s)",
-                                   // Tomamos la fecha más antigua de sus deudas
                                    Fecha = grupo.Min(x => x.FechaEmision),
-                                   // SUMAMOS el total de lo que debe esa persona en ese puesto
                                    Monto = grupo.Sum(x => x.MontoTotal)
                                }).ToList();
 
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Morosidad");
 
-                // Diseño de Cabeceras
                 var cabeceras = new[] { "N° Puesto", "Responsable", "DNI", "Concepto", "Fecha Emisión", "Deuda (S/.)" };
                 for (int i = 0; i < cabeceras.Length; i++)
                 {
@@ -58,11 +52,10 @@ namespace MercadoSanJose.Web.Controllers
                     cell.Value = cabeceras[i];
                     cell.Style.Font.Bold = true;
                     cell.Style.Font.FontColor = XLColor.White;
-                    cell.Style.Fill.BackgroundColor = XLColor.DarkSlateGray; // Color elegante
+                    cell.Style.Fill.BackgroundColor = XLColor.DarkSlateGray;
                     cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
-                // Llenado de datos con validación de nulos
                 for (int i = 0; i < reporte.Count; i++)
                 {
                     var row = i + 2;
@@ -75,10 +68,9 @@ namespace MercadoSanJose.Web.Controllers
                     worksheet.Cell(row, 5).Value = reporte[i].Fecha.ToString("dd/MM/yyyy");
 
                     worksheet.Cell(row, 6).Value = reporte[i].Monto;
-                    worksheet.Cell(row, 6).Style.NumberFormat.Format = "\"S/.\" #,##0.00"; // Formato moneda Excel
+                    worksheet.Cell(row, 6).Style.NumberFormat.Format = "\"S/.\" #,##0.00";
                 }
 
-                // Ajustes finales de tabla (Filtros, bordes y autoajuste)
                 if (reporte.Count > 0)
                 {
                     var rangoDatos = worksheet.Range(1, 1, reporte.Count + 1, 6);
@@ -94,14 +86,10 @@ namespace MercadoSanJose.Web.Controllers
             }
             catch (System.Exception ex)
             {
-                // El paracaídas: Muestra el error exacto en pantalla sin botar el servidor
                 return Content($"ERROR CRÍTICO AL GENERAR EXCEL: {ex.Message} \n\nDetalles: {ex.InnerException?.Message}");
             }
         }
 
-        // ==========================================
-        // 2. PDF: Recibo de Pago (QuestPDF)
-        // ==========================================
         [HttpGet]
         public IActionResult GenerarReciboPdf(int deudaId)
         {
@@ -137,17 +125,14 @@ namespace MercadoSanJose.Web.Controllers
                         {
                             col.Spacing(15);
 
-                            // Nombre de la institución
                             col.Item().Text("MERCADO SAN JOSÉ").Bold().FontSize(18).FontColor(Colors.Blue.Darken3);
 
-                            // Caja de Encabezado (Inspirado en tu código de GitHub)
                             col.Item().Background(Colors.Blue.Darken3).Padding(10).Row(row =>
                             {
                                 row.RelativeItem().Text("COMPROBANTE DE PAGO").FontColor(Colors.White).FontSize(14).SemiBold();
                                 row.RelativeItem().AlignRight().Text($"Nro: REC-{reciboData.ReciboNro}").FontColor(Colors.White).FontSize(12);
                             });
 
-                            // Tabla de detalles con líneas divisorias finas
                             col.Item().Table(tabla =>
                             {
                                 tabla.ColumnsDefinition(columns =>
@@ -156,7 +141,6 @@ namespace MercadoSanJose.Web.Controllers
                                     columns.RelativeColumn();
                                 });
 
-                                // Función interna para reciclar el estilo de las celdas
                                 static IContainer CellStyle(IContainer c) => c.BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingVertical(5);
 
                                 tabla.Cell().Element(CellStyle).Text("Fecha/Hora:").SemiBold();
@@ -172,12 +156,10 @@ namespace MercadoSanJose.Web.Controllers
                                 tabla.Cell().Element(CellStyle).Text(reciboData.Concepto);
                             });
 
-                            // Caja de Total
                             col.Item().Background(Colors.Grey.Lighten4).Padding(10).AlignRight()
                                .Text($"TOTAL PAGADO: S/. {reciboData.Monto:F2}").FontSize(14).Bold().FontColor(Colors.Black);
                         });
 
-                        // Pie de página estandarizado
                         page.Footer().AlignCenter().Text(t =>
                         {
                             t.Span("Este documento es un comprobante de uso interno. Generado el: ");
