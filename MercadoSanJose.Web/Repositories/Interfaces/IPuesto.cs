@@ -10,4 +10,6 @@ public interface IPuesto
     int crearPuesto(PuestoDTO puesto);
     int update(Puesto entidad);
     int delete(int id);
+
+    int updatePuesto(PuestoDTO puesto);
 }

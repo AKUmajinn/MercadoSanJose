@@ -20,6 +20,7 @@ public class PuestoDAO : IPuesto
     public Puesto getById(int id) => throw new NotImplementedException();
     public int update(Puesto entidad) => throw new NotImplementedException();
     public int delete(int id) => throw new NotImplementedException();
+
     public int crearPuesto(PuestoDTO puesto)
     {
         using SqlConnection sqlConnection = new(_connectionString);
@@ -34,5 +35,30 @@ public class PuestoDAO : IPuesto
         sqlCommand.Parameters.AddWithValue("@InquilinoId", (object?)puesto.InquilinoId ?? DBNull.Value);
 
         return Convert.ToInt32(sqlCommand.ExecuteScalar());
+    }
+
+    // ── IMPLEMENTACIÓN DEL NUEVO MÉTODO ──
+    public int updatePuesto(PuestoDTO puesto)
+    {
+        using SqlConnection sqlConnection = new(_connectionString);
+        sqlConnection.Open();
+
+        string query = @"UPDATE Puesto
+                         SET Estado = @Estado,
+                             PropietarioId = @PropietarioId,
+                             InquilinoId = @InquilinoId
+                         WHERE Id = @Id";
+
+        using SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+
+        sqlCommand.Parameters.AddWithValue("@Id", puesto.Id);
+
+        // PASAMOS EL ESTADO DIRECTAMENTE, SIN TRADUCIRLO A PALABRAS
+        sqlCommand.Parameters.AddWithValue("@Estado", puesto.Estado);
+
+        sqlCommand.Parameters.AddWithValue("@PropietarioId", (object?)puesto.PropietarioId ?? DBNull.Value);
+        sqlCommand.Parameters.AddWithValue("@InquilinoId", (object?)puesto.InquilinoId ?? DBNull.Value);
+
+        return sqlCommand.ExecuteNonQuery();
     }
 }

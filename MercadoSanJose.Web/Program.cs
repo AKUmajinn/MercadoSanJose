@@ -2,6 +2,7 @@ using MercadoSanJose.Web.Data;
 using MercadoSanJose.Web.Models;
 using MercadoSanJose.Web.Repositories.DAO;
 using MercadoSanJose.Web.Repositories.Interfaces;
+using MercadoSanJose.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +19,8 @@ builder.Services.AddScoped<IPuesto, PuestoDAO>();
 builder.Services.AddScoped<IConceptoDeuda, ConceptoDeudaDAO>();
 builder.Services.AddScoped<IDeuda, DeudaDAO>();
 builder.Services.AddScoped<IPago, PagoDAO>();
-
+builder.Services.AddScoped<IDeudaService, DeudaService>();
+builder.Services.AddScoped<ICobrosService, CobrosService>();
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 

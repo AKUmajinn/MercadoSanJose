@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MercadoSanJose.Web.Models;
-
+[Table("Concepto_Deuda")]
 public class ConceptoDeuda
 {
     public int Id { get; set; }

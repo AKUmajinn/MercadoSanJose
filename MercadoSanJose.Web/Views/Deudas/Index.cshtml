@@ -83,7 +83,7 @@ else
                         <th>DNI</th>
                         <th class="text-end">Monto</th>
                         <th class="text-center">Estado</th>
-                        <th></th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -113,11 +113,23 @@ else
                                     <span class="badge bg-success">Pagada</span>
                                 }
                             </td>
-                            <td>
-                                <a asp-action="Detalle" asp-route-id="@d.Id"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
+
+                            @* ── COLUMNA DE ACCIONES CORREGIDA ── *@
+                            <td class="text-center">
+                                <div class="d-flex gap-2 justify-content-center">
+                                    @* Botón Ver Detalle *@
+                                    <a asp-action="Detalle" asp-params-id="@d.Id" class="btn btn-sm btn-outline-primary shadow-sm">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+
+                                   
+                                    @if (d.Estado == MercadoSanJose.Web.Models.Enums.EstadoDeuda.Pagada)
+                                    {
+                                        <a asp-action="GenerarReciboPdf" asp-route-deudaId="@d.Id" class="btn btn-sm btn-danger shadow-sm">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
